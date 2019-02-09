@@ -14,6 +14,5 @@ proc getinfo(o: PyObject) {.exportpy.} =
   var dt : string = o.dtype.name.to(string)
   echo dt
   
-  let py = pyBuiltinsModule()
-  var shape = py.list(o.shape)
+  var shape = o.shape.to(seq[int])
   echo "[",shape[0],",",shape[1],"]"  

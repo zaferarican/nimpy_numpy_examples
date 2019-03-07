@@ -12,6 +12,8 @@ It uses [arraymancer](https://github.com/mratsim/Arraymancer) for the arraymance
 
 Python examples require numpy and opencv-python
 
+It uses clang as the default compiler (--cc:clang flag). If you want to change it to another, please change in .nimble file.
+
 ## How To Run
 
 ```sh

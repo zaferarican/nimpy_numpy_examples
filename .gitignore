@@ -2,3 +2,4 @@ nimcache/
 
 *.so
 *.vim
+*.json

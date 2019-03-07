@@ -18,7 +18,7 @@ task run, "Run examples":
         let folder = sf.dir.parentDir
         let plugin_path = folder.joinPath("examples").joinPath(sf.name.changeFileExt(pluginExtension))
         if sf.ext == ".nim":
-            exec "nim c -d:release --opt:speed --app:lib --out:" & plugin_path & " " & f.path
+          exec "nim c --cc:clang -d:release --opt:speed --app:lib --out:" & plugin_path & " " & f.path
 
     for f in walkDir("examples"):
         let sf = f.path.splitFile()

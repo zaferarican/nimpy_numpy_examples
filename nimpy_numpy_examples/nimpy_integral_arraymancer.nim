@@ -3,43 +3,31 @@ import nimpy/raw_buffers
 import arraymancer
 
 
-proc `+`*[T](p: ptr T, val: int) : ptr T {.inline.}=
+proc `+`[T](p: ptr T, val: int) : ptr T {.inline.}=
   cast[ptr T](cast[uint](p) + cast[uint](val * sizeof(T)))
 
 # Operator [] overloading for type int32 (cint) to use for numpy buffer
-proc `[]`*(p:RawPyBuffer, y:uint32, x:uint32):cint {.inline.} =
-  cast[ptr UncheckedArray[cint]](p.buf)[y * (p.shape + 1)[].uint32 + x]
 
-proc `[]=`*(p: RawPyBuffer, y:uint32, x:uint32, val:cint) {.inline.} =
-  cast[ptr UncheckedArray[cint]](p.buf)[y * (p.shape + 1)[].uint32 + x] = val
+proc `[]`(p:RawPyBuffer, x:uint32):cint {.inline.} =
+  cast[ptr UncheckedArray[cint]](p.buf)[x]
 
-proc toTensor*(o: PyObject):Tensor[cint] =
-  var aBuf: RawPyBuffer
-  o.getBuffer(aBuf, PyBUF_WRITABLE or PyBUF_ND)
-  let rows = aBuf.shape[].uint32
-  let columns = (aBuf.shape + 1)[].uint32
-  var 
-    seq_xy : seq[seq[cint]]
-    row_seq: seq[cint]
+proc `[]=`(p: RawPyBuffer, x:uint32, val:cint) {.inline.} =
+  cast[ptr UncheckedArray[cint]](p.buf)[x] = val
 
-  seq_xy=newSeq[seq[cint]]()
-  for row in 0..<rows:
-    row_seq = newSeq[cint]()
-    for column in 0..<columns:
-      row_seq.add(aBuf[row,column])
-    seq_xy.add(row_seq)
-  let converted = seq_xy.toTensor()
-  aBuf.release()
-  return converted
 
-proc toPyObject*(t: Tensor[cint], o: PyObject) =
-  var aBuf: RawPyBuffer
-  o.getBuffer(aBuf, PyBUF_WRITABLE or PyBUF_ND)
+proc toTensor*(aBuf: RawPyBuffer):Tensor[cint] =
+  let rows = aBuf.shape[].int32
+  let columns = (aBuf.shape + 1)[].int32
+  var seq_xy = newSeq[cint](rows * columns)
+  for i in 0..<(rows * columns):
+    seq_xy[i] = aBuf[uint32(i)]
+  result = seq_xy.toTensor.reshape(int(rows), int(columns)) 
+
+proc toPyObject*(t: Tensor[cint], aBuf: RawPyBuffer) = 
   let rows = aBuf.shape[].uint32
   let columns = (aBuf.shape + 1)[].uint32
   for coord,v in t:
-      aBuf[uint32(coord[0]),uint32(coord[1])] = v
-  aBuf.release()
+      aBuf[uint32(coord[0]) * columns + uint32(coord[1])] = v
 #[
   Computation of in-place integral image using Viola Recursion Method:
     Viola, P.; Jones, M. Rapid Object Detection using a Boosted Cascade of Simple Features. 
@@ -50,7 +38,9 @@ proc toPyObject*(t: Tensor[cint], o: PyObject) =
 ]#
 
 proc integral(o: PyObject) {.exportpy.} =
-  var integral_tensor = o.toTensor
+  var aBuf: RawPyBuffer
+  o.getBuffer(aBuf, PyBUF_WRITABLE or PyBUF_ND)
+  var integral_tensor = aBuf.toTensor
 
   let rows = integral_tensor.shape[0]
   let columns = integral_tensor.shape[1]
@@ -73,4 +63,5 @@ proc integral(o: PyObject) {.exportpy.} =
       s_o = integral_tensor[row, column] + s_c
       integral_tensor[row, column] = integral_tensor[(row-1), column] + s_o
       s_c = s_o
-  integral_tensor.toPyObject(o)
+  integral_tensor.toPyObject(aBuf)
+  aBuf.release()

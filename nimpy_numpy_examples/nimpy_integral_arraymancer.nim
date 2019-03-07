@@ -40,10 +40,13 @@ proc toPyObject*(t: Tensor[cint], aBuf: RawPyBuffer) =
 proc integral(o: PyObject) {.exportpy.} =
   var aBuf: RawPyBuffer
   o.getBuffer(aBuf, PyBUF_WRITABLE or PyBUF_ND)
-  var integral_tensor = aBuf.toTensor
+  let rows = aBuf.shape[].int
+  let columns = (aBuf.shape + 1)[].int
 
-  let rows = integral_tensor.shape[0]
-  let columns = integral_tensor.shape[1]
+  var integral_tensor = newTensor[cint](rows,columns)
+  var bufPtr = cast[ptr UncheckedArray[cint]](aBuf.buf)
+  var tensorDataPtr = cast[ptr UncheckedArray[cint]](integral_tensor.get_data_ptr)
+  copyMem(tensorDataPtr, bufPtr, rows*columns*sizeof(cint))
 
   var s_o = integral_tensor[0,0]
   var s_c = s_o
@@ -63,5 +66,5 @@ proc integral(o: PyObject) {.exportpy.} =
       s_o = integral_tensor[row, column] + s_c
       integral_tensor[row, column] = integral_tensor[(row-1), column] + s_o
       s_c = s_o
-  integral_tensor.toPyObject(aBuf)
+  copyMem(bufPtr, tensorDataPtr, rows * columns * sizeof(cint))
   aBuf.release()

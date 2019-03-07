@@ -1,5 +1,5 @@
 nimcache/
 
 *.so
-*.json
 *.vim
+*.json

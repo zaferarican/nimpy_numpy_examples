@@ -17,7 +17,7 @@ It uses clang as the default compiler (--cc:clang flag). If you want to change i
 ## How To Run
 
 ```sh
-$ nimble run
+$ nimble run_examples
 ```
 
 License

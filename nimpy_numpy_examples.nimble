@@ -1,4 +1,4 @@
-version       = "0.2.0"
+version       = "0.2.1"
 author        = "Zafer ARICAN"
 description   = "Examples to access Numpy array data using Nimpy"
 license       = "MIT"
@@ -11,7 +11,7 @@ requires "arraymancer"
 
 import oswalkdir, ospaths, strutils
 
-task run, "Run examples":
+task run_examples, "Run examples":
     let pluginExtension = when defined(windows): "pyd" else: "so"
 
     for f in walkDir("nimpy_numpy_examples"):
@@ -20,6 +20,7 @@ task run, "Run examples":
         let plugin_path = folder.joinPath("examples").joinPath(sf.name.changeFileExt(pluginExtension))
         if sf.ext == ".nim":
           exec "nim c --cc:clang -d:release  --app:lib --out:" & plugin_path & " " & f.path
+#          exec "nim c --cc:gcc -d:release  --app:lib --out:" & plugin_path & " " & f.path
 
     for f in walkDir("examples"):
         let sf = f.path.splitFile()

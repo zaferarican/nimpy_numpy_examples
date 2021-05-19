@@ -8,14 +8,14 @@ proc `+`[T](p: ptr T, val: int) : ptr T {.inline.} =
 proc `[]`(p:RawPyBuffer, y:uint32, x:uint32):cint {.inline.} =
   cast[ptr UncheckedArray[cint]](p.buf)[y * (p.shape + 1)[].uint32 + x]
 
-proc `[]=`(p: RawPyBuffer, y:uint32, x:uint32, val:cint) {.inline.} = 
+proc `[]=`(p: RawPyBuffer, y:uint32, x:uint32, val:cint) {.inline.} =
   cast[ptr UncheckedArray[cint]](p.buf)[y * (p.shape + 1)[].uint32 + x] = val
 
 
 #[
   Computation of in-place integral image using Viola Recursion Method:
-    Viola, P.; Jones, M. Rapid Object Detection using a Boosted Cascade of Simple Features. 
-  In Proceedings of the IEEE Computer Society Conference on Computer Vision and Pattern Recognition, 
+    Viola, P.; Jones, M. Rapid Object Detection using a Boosted Cascade of Simple Features.
+  In Proceedings of the IEEE Computer Society Conference on Computer Vision and Pattern Recognition,
   Kauai, HI, USA, 8–14 December 2001; pp. 511–518.
 
   It assumes that the numpy array has dtype in np.int32

@@ -6,13 +6,12 @@ import arraymancer
 proc `+`[T](p: ptr T, val: int) : ptr T {.inline.}=
   cast[ptr T](cast[uint](p) + cast[uint](val * sizeof(T)))
 
-proc toTensor*(aBuf: RawPyBuffer):Tensor[cint] =
+proc toTensor*(aBuf: RawPyBuffer) : Tensor[cint] =
   let rows = aBuf.shape[].int
   let columns = (aBuf.shape + 1)[].int
-  result = newTensor[cint](rows,columns)
+  let shape =[rows,columns]
   var bufPtr = cast[ptr UncheckedArray[cint]](aBuf.buf)
-  var tensorDataPtr = cast[ptr UncheckedArray[cint]](result.get_data_ptr)
-  copyMem(tensorDataPtr, bufPtr, rows*columns*sizeof(cint))
+  result = fromBuffer[cint](bufPtr, rows, columns)
 
 proc toPyObject*(t: Tensor[cint], aBuf: RawPyBuffer) =
   let rows = aBuf.shape[].int
@@ -55,5 +54,4 @@ proc integral(o: PyObject) {.exportpy.} =
       s_o = integral_tensor[row, column] + s_c
       integral_tensor[row, column] = integral_tensor[(row-1), column] + s_o
       s_c = s_o
-  integral_tensor.toPyObject(aBuf)
   aBuf.release()
